@@ -7,7 +7,7 @@ import org.sample.socket.message.Message;
 
 public class ClientInterface {
 
-	private String websocketUri = "ws://localhost:8080/chat/";
+	private String websocketUri = "ws://localhost:8080/ws/";
 	
 	public ClientInterface() {
 		try {

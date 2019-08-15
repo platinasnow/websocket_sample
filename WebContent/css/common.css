@@ -1,0 +1,31 @@
+@charset "UTF-8";
+/* font */
+@font-face {
+	font-family:webfont;
+	font-weight:normal;
+	font-style:normal;
+	src:url('/font/NanumGothic-Regular.eot');
+	src:local(※), url('/font/NanumGothic-Regular.woff') format('woff');
+}
+/* base */
+html,body,p,h1,h2,h3,h4,h5,h6,ul,ol,li,dl,dt,dd,table,th,td,form,fieldset,legend,input,textarea,button,select{margin:0; padding:0}
+body{font-family:webfont,'돋움',Dotum,'굴림',Gulim,Helvetica,sans-serif; font-size:12px; color:#333; -webkit-text-size-adjust:none;}
+h1,h2,h3,h4,h5,h6,strong{font-weight:normal; font-size:100%;}
+fieldset,img,button{border:0;}
+img,button{vertical-align:top;}
+input, select, button, textarea {background:#fff; font-family:webfont,'돋움',Dotum,'굴림',Gulim,Helvetica,sans-serif; font-size:13px; vertical-align:middle;}
+input[type=text], input[type=date], input[type=number], select{height:30px; border:1px solid #73899a;}
+input[type=text], input[type=date], input[type=number]{padding-left:5px;}
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder{color:#73899a;}
+table{width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed;}
+th{background:#b5c3ce; font-weight:normal; color:#fff;}
+textarea{resize:none;}
+address,em{font-style:normal;}
+ol,ul{list-style:none;}
+hr{display:none;}
+a{text-decoration:none; color:#444444;}
+a:hover,a:active{text-decoration:none;}
+legend{position:absolute; left:-9999px; top:0}
+caption{overflow:hidden; width:0; height:0; font-size:0; line-height:0;}
+button{background:none; cursor:pointer;}
+button::-moz-focus-inner{padding:0; border:0;}

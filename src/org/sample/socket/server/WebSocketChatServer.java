@@ -1,7 +1,10 @@
 package org.sample.socket.server;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -18,26 +21,27 @@ import org.sample.socket.message.Message;
 import org.sample.socket.message.MessageDecoder;
 import org.sample.socket.message.MessageEncoder;
 
-@ServerEndpoint(value = "/ws/{username}", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
-public class WebSocketServer {
+@ServerEndpoint(value = "/chat/{username}", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
+public class WebSocketChatServer {
 
 	private Session session;
-	private static Set<WebSocketServer> wsEndpoints = new CopyOnWriteArraySet<>();
+	private static Set<WebSocketChatServer> chatEndpoints = new CopyOnWriteArraySet<>();
 	private static HashMap<String, String> users = new HashMap<>();
 	
 	@OnOpen
 	public void onOpen(Session session, @PathParam("username") String username) throws IOException, EncodeException {
 		System.out.println("open");
 		this.session = session;
-		wsEndpoints.add(this);
+        chatEndpoints.add(this);
         users.put(session.getId(), username);
  
         Message message = new Message();
         message.setFrom(username);
         message.setContent("Connected!");
+        message.setUsers(hashMapToList(users));
         broadcast(message);
 	}
-
+	
 	@OnMessage
 	public void onMessage(Session session, Message message) throws IOException, EncodeException {
 		message.setFrom(users.get(session.getId()));
@@ -51,7 +55,7 @@ public class WebSocketServer {
 	@OnClose
 	public void onClose(Session session) throws IOException, EncodeException {
 		System.out.println("close");
-		wsEndpoints.remove(this);
+		chatEndpoints.remove(this);
         Message message = new Message();
         message.setFrom(users.get(session.getId()));
         message.setContent("Disconnected!");
@@ -65,7 +69,7 @@ public class WebSocketServer {
 	}
 	
 	private static void sendTarget(Message message) throws IOException, EncodeException {
-		wsEndpoints.forEach(endpoint -> {
+		chatEndpoints.forEach(endpoint -> {
             synchronized (endpoint) {
                 try {
                 	String userId = endpoint.users.get((endpoint.session.getId()));
@@ -80,7 +84,7 @@ public class WebSocketServer {
 	}
 	
 	private static void broadcast(Message message)  throws IOException, EncodeException {
-		wsEndpoints.forEach(endpoint -> {
+        chatEndpoints.forEach(endpoint -> {
             synchronized (endpoint) {
             	try {
 					endpoint.session.getBasicRemote().sendObject(message);
@@ -91,6 +95,16 @@ public class WebSocketServer {
 				}
             }
         });
+	}
+	
+	private List<String> hashMapToList(HashMap<String, String> map){
+		List<String> list = new ArrayList<String>();
+		Iterator iterator = map.keySet().iterator();
+		while(iterator.hasNext()) {
+			Object item = iterator.next();
+			list.add(map.get(item));
+		}
+		return list;
 	}
 	
 }
