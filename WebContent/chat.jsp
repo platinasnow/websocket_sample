@@ -60,7 +60,7 @@
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script>
 var username = null;
-for(;;){
+while(true){
 	username = prompt('아이디를 입력해주세요.');
 	if(username != null && username != ''){
 		connect();
@@ -75,64 +75,56 @@ function connect() {
     ws = new WebSocket("ws://localhost:8080/chat/"+ username);
     ws.onmessage = function(event) {
         var message = JSON.parse(event.data);
-        if(message.content == 'Connected!'){
-        	var users = message.users;
-        	var profileHtml = '';
-        	var optionsHtml = '<option value="">전체</option>';
-        	for(var i=0; i <users.length; i++){
-        		profileHtml += '<li class="profile" data-id="'+users[i]+'">'+users[i]+'</li>'
-        		if(username != users[i]){
-        			optionsHtml += '<option value="'+users[i]+'">'+users[i]+'</option>';	
-        		}
-        	}
-        	$('.user_wrap ul').html(profileHtml);
-        	$('#to').html(optionsHtml);
-        }else if(message.content == 'Disconnected!'){
-        	console.log(message);
-        	$('.profile[data-id="'+message.from+'"]').remove();
-        	$('#to option[value="'+message.from+'"]').remove();
-        }else{
-        	var whisper = '';
-        	if(message.to != '' && message.to != null){
-        		whisper = 'whisper';
-        	}else{
-        		whisper = '';
-        	}
-            var text = ''; 
-            text += '<li>'; 
-            text += 	'<div class="title_line user_msg_wrap"><img src="/images/user.png"/></div>';
-            text += 		'<div class="textbox user_msg_wrap">';
-            text += 		'<div><label class="username">'+message.from+'</label></div>';
-            text += 		'<div class="user_msg_box"><img src="/images/msg.png"/><label class="msg '+whisper+'">'+message.content+'</label></div>';
-            text += 	'</div>';		
-            text += '</li>';
-            $('#log_wrap').append(text);
+        switch(message.content){
+	        case 'Connected!':
+	        	var users = message.users;
+	        	var profileHtml = '';
+	        	var optionsHtml = '<option value="">전체</option>';
+	        	for(var i=0; i <users.length; i++){
+	        		profileHtml += '<li class="profile" data-id="'+users[i]+'">'+users[i]+'</li>'
+	        		if(username != users[i]){
+	        			optionsHtml += '<option value="'+users[i]+'">'+users[i]+'</option>';	
+	        		}
+	        	}
+	        	$('.user_wrap ul').html(profileHtml);
+	        	$('#to').html(optionsHtml);	
+	        	break;
+	        	
+	        case 'Disconnected!':
+	        	$('.profile[data-id="'+message.from+'"]').remove();
+	        	$('#to option[value="'+message.from+'"]').remove();
+	        	break;
+	        	
+	        default:
+	        	var whisper = (message.to != '' && message.to != null) ? 'whisper' : '';
+	        	appendMsg(message.from, message.content, whisper);
+	        	break;
         }
     };
 };
-
 function send() {
-	var to = $('#to').val();
-	var content = $('#msg').val();
     var json = JSON.stringify({
-        "content":content,
-        "to":to
+        "content":$('#msg').val(),
+        "to":$('#to').val()
     });
     ws.send(json);
     whisper();
     $('#msg').val('');
 };
+function appendMsg(username, content, whisper){
+	var text = ''; 
+    text += '<li>'; 
+    text += 	'<div class="title_line user_msg_wrap"><img src="/images/user.png"/></div>';
+    text += 		'<div class="textbox user_msg_wrap">';
+    text += 		'<div><label class="username">'+username+'</label></div>';
+    text += 		'<div class="user_msg_box"><img src="/images/msg.png"/><label class="msg '+whisper+'">'+content+'</label></div>';
+    text += 	'</div>';		
+    text += '</li>';
+    $('#log_wrap').append(text);	
+};
 function whisper(){
 	if($('#to').val() != ''){
-		 var text = ''; 
-         text += '<li>'; 
-         text += 	'<div class="title_line user_msg_wrap"><img src="/images/user.png"/></div>';
-         text += 		'<div class="textbox user_msg_wrap">';
-         text += 		'<div><label class="username">'+username+'</label></div>';
-         text += 		'<div class="user_msg_box"><img src="/images/msg.png"/><label class="msg whisper">'+$('#msg').val()+'</label></div>';
-         text += 	'</div>';		
-         text += '</li>';
-         $('#log_wrap').append(text);	
+		appendMsg(username, $('#msg').val(), 'whisper');
 	}
 };
 </script>
