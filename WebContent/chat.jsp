@@ -72,7 +72,7 @@ function connect() {
 	if(ws != null && ws.readyState == 1){
 		ws.close();
 	}
-    ws = new WebSocket("ws://localhost:8080/chat/"+ username);
+    ws = new WebSocket("ws://210.16.195.70:8080/chat/"+ username);
     ws.onmessage = function(event) {
         var message = JSON.parse(event.data);
         switch(message.content){
@@ -88,11 +88,13 @@ function connect() {
 	        	}
 	        	$('.user_wrap ul').html(profileHtml);
 	        	$('#to').html(optionsHtml);	
+	        	callNotification(message.from + '님이 입장하셨습니다.', '환영합니다', 'http://210.16.195.70:8080/images/ezgif-2-2de21bd25764.gif');
 	        	break;
 	        	
 	        case 'Disconnected!':
 	        	$('.profile[data-id="'+message.from+'"]').remove();
 	        	$('#to option[value="'+message.from+'"]').remove();
+	        	callNotification(message.from + '님이 퇴장하셨습니다.', '다음에 또 봐요', 'http://210.16.195.70:8080/images/ezgif-2-f89001447bb3.gif');
 	        	break;
 	        	
 	        default:
@@ -100,9 +102,11 @@ function connect() {
 	        	appendMsg(message.from, message.content, whisper);
 	        	break;
         }
+        $('#log').scrollTop($('#log_wrap').height()+100);
     };
 };
 function send() {
+	if($.trim($('#msg').val()) == '') return;
     var json = JSON.stringify({
         "content":$('#msg').val(),
         "to":$('#to').val()
@@ -125,7 +129,27 @@ function appendMsg(username, content, whisper){
 function whisper(){
 	if($('#to').val() != ''){
 		appendMsg(username, $('#msg').val(), 'whisper');
+		$('#log').scrollTop($('#log_wrap').height()+100);
 	}
+};
+$('#msg').keydown(function(e){
+	if(e.keyCode == 13){
+		send();
+	}
+});
+function initNotification(){
+	Notification.requestPermission(function (status) {
+	    if (Notification.permission !== status) {
+	      Notification.permission = status;
+	    }
+	});
+};initNotification();
+function callNotification(theBody,theTitle, theIcon) {
+	  var options = {
+	      body: theBody,
+	      icon: theIcon
+	  }
+	  var n = new Notification(theTitle,options);
 };
 </script>
 </body>

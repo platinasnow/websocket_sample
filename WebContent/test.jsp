@@ -18,6 +18,22 @@ to user : <input type="text" id="to"  />  msg: <input type="text" id="msg" value
 
 </body>
 <script>
+function initNotification(){
+	Notification.requestPermission(function (status) {
+	    if (Notification.permission !== status) {
+	      Notification.permission = status;
+	    }
+	});
+};initNotification();
+function callNotification(theBody,theTitle) {
+	  var options = {
+	      body: theBody,
+	      icon: 'http://localhost:8080/images/ezgif-2-2de21bd25764.gif'
+	  }
+	  var n = new Notification(theTitle,options);
+};
+callNotification('title', '환영합니다');
+
 var ws;
 function connect() {
 	if(ws != null && ws.readyState == 1){

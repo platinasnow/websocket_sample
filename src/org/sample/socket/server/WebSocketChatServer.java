@@ -3,10 +3,10 @@ package org.sample.socket.server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.websocket.EncodeException;
 import javax.websocket.OnClose;
@@ -24,15 +24,13 @@ import org.sample.socket.message.MessageEncoder;
 @ServerEndpoint(value = "/chat/{username}", decoders = MessageDecoder.class, encoders = MessageEncoder.class)
 public class WebSocketChatServer {
 
-	private Session session;
-	private static Set<WebSocketChatServer> chatEndpoints = new CopyOnWriteArraySet<>();
-	private static HashMap<String, String> users = new HashMap<>();
+	private final static Set<Session> session = new HashSet<Session>();
+	private final static HashMap<String, String> users = new HashMap<>();
 	
 	@OnOpen
 	public void onOpen(Session session, @PathParam("username") String username) throws IOException, EncodeException {
 		System.out.println("open");
-		this.session = session;
-        chatEndpoints.add(this);
+		this.session.add(session);
         users.put(session.getId(), username);
  
         Message message = new Message();
@@ -55,7 +53,8 @@ public class WebSocketChatServer {
 	@OnClose
 	public void onClose(Session session) throws IOException, EncodeException {
 		System.out.println("close");
-		chatEndpoints.remove(this);
+		this.session.remove(session);
+		
         Message message = new Message();
         message.setFrom(users.get(session.getId()));
         message.setContent("Disconnected!");
@@ -69,32 +68,30 @@ public class WebSocketChatServer {
 	}
 	
 	private static void sendTarget(Message message) throws IOException, EncodeException {
-		chatEndpoints.forEach(endpoint -> {
-            synchronized (endpoint) {
-                try {
-                	String userId = endpoint.users.get((endpoint.session.getId()));
-                	if(userId.equals(message.getTo())) {
-                		endpoint.session.getBasicRemote().sendObject(message);
-                	}
-                } catch (IOException | EncodeException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+		Iterator iterator = session.iterator();
+		while(iterator.hasNext()) {
+			Session endpoint = (Session) iterator.next();
+			 try {
+             	String userId = users.get(endpoint.getId());
+             	if(userId.equals(message.getTo())) {
+             		endpoint.getBasicRemote().sendObject(message);
+             	}
+             } catch (IOException | EncodeException e) {
+                 e.printStackTrace();
+             }
+		}
 	}
 	
 	private static void broadcast(Message message)  throws IOException, EncodeException {
-        chatEndpoints.forEach(endpoint -> {
-            synchronized (endpoint) {
-            	try {
-					endpoint.session.getBasicRemote().sendObject(message);
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (EncodeException e) {
-					e.printStackTrace();
-				}
-            }
-        });
+		Iterator iterator = session.iterator();
+		while(iterator.hasNext()) {
+			Session endpoint = (Session) iterator.next();
+			 try {
+         		endpoint.getBasicRemote().sendObject(message);
+             } catch (IOException | EncodeException e) {
+                 e.printStackTrace();
+             }
+		}
 	}
 	
 	private List<String> hashMapToList(HashMap<String, String> map){
